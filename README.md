@@ -1,57 +1,41 @@
-# nodejs-express-typescript-postgres-boilerplate
-The **nodejs-express-typescript-postgres-boilerplate** is a boilerplate project using nodejs, typescript, postgresql with default CRUD for users
+## Prerequisites
 
+-   Node.js (v18 or higher recommended)
+-   npm (comes with Node.js) or yarn
+-   mongodb (setup locally)
 
-## Table of Contents
-* [Getting Started](https://github.com/arisculala/nodejs-express-typescript-postgres-boilerplate#getting-started)
-     - [Prerequisites](https://github.com/arisculala/nodejs-express-typescript-postgres-boilerplate#prerequisites)
-     - [Installation](https://github.com/arisculala/nodejs-express-typescript-postgres-boilerplate#installation)
+## Setup
 
-[References](https://github.com/arisculala/nodejs-express-typescript-postgres-boilerplate#references)
- 
+1. Clone the repository:
 
-## Getting Started
+    ```bash
+    git clone https://github.com/arisculala/React-Node-Test.git
+    cd React-Node-Test
+    cd SERVER
+    ```
 
-### Prerequisites
-Before you begin, ensure you have the following installed:
-* Node.js
-* npm or yarn
-* PostgreSQL
+2. Set `env` variables
 
-### Installation
-1. Clone the repository
-```bash
-$ git clone https://github.com/arisculala/nodejs-express-typescript-postgres-boilerplate.git
-```
-2. Copy .env.example (Configure the service by updating the .env file with your PostgreSQL connection details)
-```bash
-$ cd nodejs-express-typescript-postgres-boilerplate
-$ cp .env.example .env
-```
-3. Install dependencies
-```bash
-$ npm install
-```
-4. Initialize database
-```bash
-$ chmod +x src/scripts/db/initialize_db.sh
-$ ./src/scripts/db/initialize_db.sh
-```
-4. Build the service
-```bash
-$ npm run build
-```
-5. Run the service
-```bash
-$ npm run start
-```
-6. Check service is running
-```bash
-localhost:3000/api/healthcheck/liveness
-```
-7. Using development, you can run the service
-```bash
-$ npm run dev
-```
+    ```bash
+    cp .env.example .env
+    ```
 
-## References
+    - Setup the following variables:
+        - NODE_ENV (environment)
+        - HTTPS (`false` running locally)
+        - DB_URL (local url of your mongodb e.g. `mongodb://127.0.0.1:27017`)
+        - DB (database name e.g. `Prolink`)
+
+3. Install dependency
+
+    ```bash
+    npm install
+    ```
+
+4. Run using npm
+    - For initial run or fresh run, the application will initialized the collections and default collections data like users etc.
+    ```bash
+    npm run start
+    ```
+
+-   You can now access your server base url: `http://127.0.0.1:5001/`
