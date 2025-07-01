@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { sendError } = require('../../utils/errorResponse');
+const { getXUserId } = require('../../utils/getXUserId');
 const User = require('../../model/schema/user');
 
 const generateRandomPassword = (length = 12) => {
@@ -45,6 +46,7 @@ const login = async (req, res) => {
       .setHeader('Authorization', `Bearer ${token}`)
       .json({ token: token, user });
   } catch (error) {
+    console.log(error);
     return sendError(res, 500, 'Failed to login');
   }
 };
@@ -76,6 +78,7 @@ const adminRegister = async (req, res) => {
     await newUser.save();
     res.status(200).json({ message: 'Admin created successfully' });
   } catch (error) {
+    console.log(error);
     return sendError(res, 500, 'Failed to register admin');
   }
 };
@@ -111,22 +114,18 @@ const register = async (req, res) => {
     await newUser.save();
     res.status(200).json({ message: 'User created successfully' });
   } catch (error) {
+    console.log(error);
     return sendError(res, 500, 'Failed to register user');
   }
 };
 
 const newUser = async (req, res) => {
   try {
-    const {
-      userId,
-      username,
-      email,
-      firstName,
-      lastName,
-      phoneNumber,
-      role,
-      active,
-    } = req.body;
+    const userId = getXUserId(req, res);
+    if (!userId) return;
+
+    const { username, email, firstName, lastName, phoneNumber, role, active } =
+      req.body;
 
     const existingUser = await User.findOne({ username });
     if (existingUser)
@@ -174,23 +173,32 @@ const getUsers = async (req, res) => {
       .populate({
         path: 'roles',
       })
+      .populate('createdBy')
+      .populate('updatedBy')
+      .populate('tenants')
       .exec();
 
     res.status(200).json(users);
   } catch (error) {
+    console.log(error);
     return sendError(res, 500, 'Failed to fetch users');
   }
 };
 
 const getUser = async (req, res) => {
   try {
-    let user = await User.findOne({ _id: req.params.id }).populate({
-      path: 'roles',
-    });
+    let user = await User.findOne({ _id: req.params.id })
+      .populate({
+        path: 'roles',
+      })
+      .populate('createdBy')
+      .populate('updatedBy')
+      .populate('tenants');
     if (!user) return sendError(res, 404, 'User not found');
 
     res.status(200).json(user);
   } catch (error) {
+    console.log(error);
     return sendError(res, 500, 'Failed to get user');
   }
 };
@@ -217,6 +225,7 @@ const deleteUser = async (req, res) => {
       return sendError(res, 400, `You cannot delete admin user`);
     }
   } catch (error) {
+    console.log(error);
     return sendError(res, 500, 'Failed to delete user');
   }
 };
@@ -256,12 +265,16 @@ const deleteUsers = async (req, res) => {
       .status(200)
       .json({ message: 'Successfully deleted users', updatedUsers });
   } catch (err) {
+    console.log(error);
     return sendError(res, 500, 'Failed to delete users');
   }
 };
 
 const setUserActiveStatus = async (req, res) => {
   try {
+    const userId = getXUserId(req, res);
+    if (!userId) return;
+
     const { active } = req.body;
 
     if (typeof active !== 'boolean') {
@@ -270,7 +283,7 @@ const setUserActiveStatus = async (req, res) => {
 
     const result = await User.updateOne(
       { _id: req.params.id },
-      { $set: { active } }
+      { $set: { active, updatedBy: userId, updatedDate: new Date() } }
     );
 
     res.status(200).json({
@@ -278,51 +291,77 @@ const setUserActiveStatus = async (req, res) => {
       result,
     });
   } catch (error) {
+    console.log(error);
     return sendError(res, 500, 'Failed to update user active status');
   }
 };
 
 const editUserGeneral = async (req, res) => {
   try {
+    const userId = getXUserId(req, res);
+    if (!userId) return;
+
     const { firstName, lastName } = req.body;
+
     const result = await User.updateOne(
       { _id: req.params.id },
-      { $set: { firstName, lastName } }
+      {
+        $set: {
+          firstName,
+          lastName,
+          updatedBy: userId,
+          updatedDate: new Date(),
+        },
+      }
     );
     res.status(200).json(result);
   } catch (error) {
+    console.log(error);
     return sendError(res, 500, 'Failed to update user general info');
   }
 };
 
 const editUserEmail = async (req, res) => {
   try {
+    const userId = getXUserId(req, res);
+    if (!userId) return;
+
     const { email } = req.body;
+
     const result = await User.updateOne(
       { _id: req.params.id },
-      { $set: { email } }
+      { $set: { email, updatedBy: userId, updatedDate: new Date() } }
     );
     res.status(200).json(result);
   } catch (error) {
+    console.log(error);
     return sendError(res, 500, 'Failed to update user email');
   }
 };
 
 const editUserPhoneNumber = async (req, res) => {
   try {
+    const userId = getXUserId(req, res);
+    if (!userId) return;
+
     const { phoneNumber } = req.body;
+
     const result = await User.updateOne(
       { _id: req.params.id },
-      { $set: { phoneNumber } }
+      { $set: { phoneNumber, updatedBy: userId, updatedDate: new Date() } }
     );
     res.status(200).json(result);
   } catch (error) {
+    console.log(error);
     return sendError(res, 500, 'Failed to update user phone number');
   }
 };
 
 const updatePassword = async (req, res) => {
   try {
+    const userId = getXUserId(req, res);
+    if (!userId) return;
+
     let { currentPassword, newPassword } = req.body;
 
     // Find the user by id
@@ -350,12 +389,15 @@ const updatePassword = async (req, res) => {
       {
         $set: {
           password: hashedNewPassword,
+          updatedBy: userId,
+          updatedDate: new Date(),
         },
       }
     );
 
     res.status(200).json(result);
   } catch (err) {
+    console.log(error);
     return sendError(res, 500, 'Failed to update user password');
   }
 };
@@ -371,6 +413,7 @@ const changeRoles = async (req, res) => {
 
     res.status(200).json(result);
   } catch (error) {
+    console.log(error);
     return sendError(res, 500, 'Failed to change roles');
   }
 };

@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// create login schema
 const user = new mongoose.Schema({
   username: {
     type: String,
@@ -49,6 +48,12 @@ const user = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  tenants: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Tenant',
+    },
+  ],
 });
 
 module.exports = mongoose.model('User', user, 'User');

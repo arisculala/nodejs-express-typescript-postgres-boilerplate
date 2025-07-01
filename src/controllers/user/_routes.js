@@ -8,7 +8,7 @@ router.post('/login', user.login);
 router.post('/admin-register', user.adminRegister);
 router.post('/register', user.register);
 
-router.post('/', user.newUser);
+router.post('/', auth, user.newUser);
 
 router.get('/', auth, user.getUsers);
 router.get('/:id', auth, user.getUser);
